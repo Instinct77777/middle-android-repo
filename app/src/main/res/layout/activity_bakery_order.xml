@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:padding="16dp"
     android:background="@drawable/about_us_background">
 
@@ -15,56 +14,32 @@
         android:src="@android:drawable/ic_menu_revert"
         android:contentDescription="Back"
         android:background="?android:attr/selectableItemBackground"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@android:color/white"
-        android:scaleX="0"
-        android:scaleY="0"
-        android:translationX="0.dp"
-        android:translationY="0.dp" />
+        app:tint="@android:color/white" />
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Bakery Order"
-        android:textColor="@android:color/white"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/back_button"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:scaleX="0"
-        android:scaleY="0"
-        android:translationX="0.dp"
-        android:translationY="0.dp" />
+    <!-- CustomViewGroup for Animated Views -->
+    <com.example.androidpracticumcustomview.CustomViewGroup
+        android:id="@+id/custom_view_group"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
 
+    <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/bakery_items_recycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:scrollbars="vertical"
-        app:layout_constraintTop_toBottomOf="@id/title"
-        app:layout_constraintBottom_toTopOf="@id/total_price_text"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:scaleX="0"
-        android:scaleY="0"
-        android:translationX="1.dp"
-        android:translationY="1.dp" />
+        android:layout_weight="1"
+        android:scrollbars="vertical" />
 
+    <!-- Total Price -->
     <TextView
         android:id="@+id/total_price_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Total: 0.00 rub"
-        android:textColor="@android:color/black"
+        android:textColor="@android:color/white"
         android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:scaleX="0"
-        android:scaleY="0"
-        android:translationX="1.dp"
-        android:translationY="1.dp" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp" />
+</LinearLayout>

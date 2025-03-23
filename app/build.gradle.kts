@@ -82,5 +82,6 @@ dependencies {
     implementation("androidx.navigation:navigation-runtime-ktx:2.5.3")
 
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation(libs.material)
 
 }

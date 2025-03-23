@@ -218,7 +218,7 @@ fun ItemDescriptionScreen(navController: NavController, bakeryItem: BakeryItem) 
         Text(
             text = "Price: ${"%.2f".format(bakeryItem.price)} rub.",
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
+           modifier = Modifier.padding(bottom = 16.dp)
         )
 
         Button(
