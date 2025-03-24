@@ -19,7 +19,8 @@ class CustomViewGroup @JvmOverloads constructor(
 
     companion object {
         private const val MAX_CHILDREN = 2
-        private const val TRANSLATION_ANIMATION_DURATION = 1000L // Reduced duration for better visibility
+        private const val ALPHA_ANIMATION_DURATION = 2000L // Fade duration 2000ms
+        private const val TRANSLATION_ANIMATION_DURATION = 5000L // Movement duration 5000ms
     }
 
     private var viewHeight = 0
@@ -59,25 +60,23 @@ class CustomViewGroup @JvmOverloads constructor(
         view.translationY = 0f
         view.visibility = View.VISIBLE
 
-        // Calculate the target translation based on the view's position
         val targetTranslation = when (indexOfChild(view)) {
-            0 -> -viewHeight / 4f // Move first view up by 1/4 of the container height
-            1 -> viewHeight / 4f  // Move second view down by 1/4 of the container height
+            0 -> -viewHeight / 4f
+            1 -> viewHeight / 4f
             else -> 0f
         }
 
-        // Use ObjectAnimator for more controlled animation
-        val alphaAnimator = ObjectAnimator.ofFloat(view, "alpha", 0f, 1f)
-        val translationAnimator = ObjectAnimator.ofFloat(view, "translationY", 0f, targetTranslation)
+        ObjectAnimator.ofFloat(view, "alpha", 0f, 1f).apply {
+            duration = ALPHA_ANIMATION_DURATION
+            startDelay = delay
+            start()
+        }
 
-        alphaAnimator.duration = TRANSLATION_ANIMATION_DURATION
-        translationAnimator.duration = TRANSLATION_ANIMATION_DURATION
-
-        alphaAnimator.startDelay = delay
-        translationAnimator.startDelay = delay
-
-        alphaAnimator.start()
-        translationAnimator.start()
+        ObjectAnimator.ofFloat(view, "translationY", 0f, targetTranslation).apply {
+            duration = TRANSLATION_ANIMATION_DURATION
+            startDelay = delay
+            start()
+        }
     }
 
     fun animateAllChildren() {
@@ -112,13 +111,11 @@ class XmlActivity : AppCompatActivity() {
                     scaleType = ImageView.ScaleType.CENTER_CROP
                     layoutParams = LinearLayout.LayoutParams(500, 500).apply {
                         gravity = Gravity.CENTER
-                        // Add some margin between views
                         topMargin = if (index == 0) 0 else 20
                     }
                     customViewGroup.addView(this)
                 }
             }
-            // Post the animation to ensure views are laid out
             customViewGroup.post {
                 customViewGroup.animateAllChildren()
             }
