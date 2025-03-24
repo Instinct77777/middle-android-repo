@@ -10,7 +10,6 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import com.google.common.io.Resources
 
 class CustomViewGroup @JvmOverloads constructor(
     context: Context,
@@ -20,7 +19,7 @@ class CustomViewGroup @JvmOverloads constructor(
 
     companion object {
         private const val MAX_CHILDREN = 2
-        private const val TRANSLATION_ANIMATION_DURATION = 5000L
+        private const val TRANSLATION_ANIMATION_DURATION = 1000L // Reduced duration for better visibility
     }
 
     private var viewHeight = 0
@@ -51,7 +50,7 @@ class CustomViewGroup @JvmOverloads constructor(
         }
     }
 
-    fun animateChild(view: View, delay: Long) {
+    private fun animateChild(view: View, delay: Long) {
         if (indexOfChild(view) < 0) {
             throw IllegalStateException("View must be added before animation")
         }
@@ -60,18 +59,25 @@ class CustomViewGroup @JvmOverloads constructor(
         view.translationY = 0f
         view.visibility = View.VISIBLE
 
+        // Calculate the target translation based on the view's position
         val targetTranslation = when (indexOfChild(view)) {
-            0 -> -((viewHeight - view.height) / 4).toFloat()
-            1 -> ((viewHeight - view.height) / 4).toFloat()
+            0 -> -viewHeight / 4f // Move first view up by 1/4 of the container height
+            1 -> viewHeight / 4f  // Move second view down by 1/4 of the container height
             else -> 0f
         }
 
-        view.animate()
-            .alpha(1f)
-            .translationY(targetTranslation)
-            .setDuration(TRANSLATION_ANIMATION_DURATION)
-            .setStartDelay(delay)
-            .start()
+        // Use ObjectAnimator for more controlled animation
+        val alphaAnimator = ObjectAnimator.ofFloat(view, "alpha", 0f, 1f)
+        val translationAnimator = ObjectAnimator.ofFloat(view, "translationY", 0f, targetTranslation)
+
+        alphaAnimator.duration = TRANSLATION_ANIMATION_DURATION
+        translationAnimator.duration = TRANSLATION_ANIMATION_DURATION
+
+        alphaAnimator.startDelay = delay
+        translationAnimator.startDelay = delay
+
+        alphaAnimator.start()
+        translationAnimator.start()
     }
 
     fun animateAllChildren() {
@@ -106,11 +112,16 @@ class XmlActivity : AppCompatActivity() {
                     scaleType = ImageView.ScaleType.CENTER_CROP
                     layoutParams = LinearLayout.LayoutParams(500, 500).apply {
                         gravity = Gravity.CENTER
+                        // Add some margin between views
+                        topMargin = if (index == 0) 0 else 20
                     }
                     customViewGroup.addView(this)
                 }
             }
-            customViewGroup.animateAllChildren()
+            // Post the animation to ensure views are laid out
+            customViewGroup.post {
+                customViewGroup.animateAllChildren()
+            }
         } catch (e: IllegalStateException) {
             e.printStackTrace()
         }
