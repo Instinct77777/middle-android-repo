@@ -1,62 +1,118 @@
 package com.example.androidpracticumcustomview
 
 import android.animation.ObjectAnimator
+import android.content.Context
 import android.os.Bundle
-import android.widget.FrameLayout
+import android.util.AttributeSet
+import android.view.Gravity
+import android.view.View
 import android.widget.ImageButton
-import android.widget.TextView
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import android.view.animation.AccelerateDecelerateInterpolator
+import com.google.common.io.Resources
 
+class CustomViewGroup @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : LinearLayout(context, attrs, defStyleAttr) {
+
+    companion object {
+        private const val MAX_CHILDREN = 2
+        private const val TRANSLATION_ANIMATION_DURATION = 5000L
+    }
+
+    private var viewHeight = 0
+
+    init {
+        orientation = VERTICAL
+        gravity = Gravity.CENTER
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        viewHeight = h
+    }
+
+    override fun addView(child: View?) {
+        enforceMaxChildren()
+        super.addView(child)
+    }
+
+    override fun addView(child: View?, index: Int) {
+        enforceMaxChildren()
+        super.addView(child, index)
+    }
+
+    private fun enforceMaxChildren() {
+        if (childCount >= MAX_CHILDREN) {
+            throw IllegalStateException("CustomViewGroup can contain no more than $MAX_CHILDREN children")
+        }
+    }
+
+    fun animateChild(view: View, delay: Long) {
+        if (indexOfChild(view) < 0) {
+            throw IllegalStateException("View must be added before animation")
+        }
+
+        view.alpha = 0f
+        view.translationY = 0f
+        view.visibility = View.VISIBLE
+
+        val targetTranslation = when (indexOfChild(view)) {
+            0 -> -((viewHeight - view.height) / 4).toFloat()
+            1 -> ((viewHeight - view.height) / 4).toFloat()
+            else -> 0f
+        }
+
+        view.animate()
+            .alpha(1f)
+            .translationY(targetTranslation)
+            .setDuration(TRANSLATION_ANIMATION_DURATION)
+            .setStartDelay(delay)
+            .start()
+    }
+
+    fun animateAllChildren() {
+        for (i in 0 until childCount) {
+            getChildAt(i)?.let {
+                animateChild(it, i * 500L)
+            }
+        }
+    }
+}
 
 class XmlActivity : AppCompatActivity() {
-
-    private lateinit var totalPriceText: TextView
     private lateinit var customViewGroup: CustomViewGroup
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bakery_order)
 
-        // Initialize views
-        val backButton: ImageButton = findViewById(R.id.back_button)
-        totalPriceText = findViewById(R.id.total_price_text)
+        findViewById<ImageButton>(R.id.back_button).setOnClickListener { onBackPressed() }
         customViewGroup = findViewById(R.id.custom_view_group)
 
-        backButton.setOnClickListener {
-            onBackPressed()
-        }
-
-        setupCustomViewGroup(customViewGroup)
+        setupCustomViewGroup()
     }
 
-
-    private fun setupCustomViewGroup(customViewGroup: CustomViewGroup) {
+    private fun setupCustomViewGroup() {
         val images = listOf(R.drawable.baget, R.drawable.kruassan)
 
-
-        for (i in images.indices) {
-            val imageView = ImageView(this).apply {
-                setImageResource(images[i])
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                layoutParams = FrameLayout.LayoutParams(200, 200).apply {
-                    gravity = android.view.Gravity.CENTER_HORIZONTAL // Center horizontally
-                    topMargin = if (i == 0) 0 else customViewGroup.height // First element at the top, second at the bottom
+        try {
+            images.forEachIndexed { index, resId ->
+                ImageView(this).apply {
+                    setImageResource(resId)
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    layoutParams = LinearLayout.LayoutParams(500, 500).apply {
+                        gravity = Gravity.CENTER
+                    }
+                    customViewGroup.addView(this)
                 }
             }
-
-
-            customViewGroup.addView(imageView)
-
-
-            customViewGroup.animateView(imageView, isSecondChild = (i == 1), delay = i * 500)
+            customViewGroup.animateAllChildren()
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
         }
-
-
-        val priceAnimator = ObjectAnimator.ofFloat(totalPriceText, "translationY", 0f, -300f)
-        priceAnimator.duration = 1000
-        priceAnimator.interpolator = AccelerateDecelerateInterpolator()
-        priceAnimator.start()
     }
 }

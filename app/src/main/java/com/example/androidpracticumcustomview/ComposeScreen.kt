@@ -54,16 +54,13 @@ fun ComposeScreen(navController: NavController, bakeryViewModel: BakeryViewModel
 
         val bakeryItems = listOf(
             BakeryItem("baget", 40.0, R.drawable.baget),
-            BakeryItem("cruassan", 50.0, R.drawable.kruassan),
-           // BakeryItem("cherry pie", 150.0, R.drawable.vishnya_pirog),
-           // BakeryItem("cheeze cake", 80.0, R.drawable.syrniki),
-            // BakeryItem("napoleon", 350.0, R.drawable.napoleon_tort)
+            BakeryItem("cruassan", 50.0, R.drawable.kruassan)
+            // Если нужно добавить еще элементы, это вызовет исключение ниже
         )
 
         if (bakeryItems.size > 2) {
-      throw IllegalStateException("Количество дочерних элементов не должно превышать двух")
-      }
-
+            throw IllegalStateException("Количество дочерних элементов не должно превышать двух")
+        }
 
         val visibleItems =
             remember { mutableStateListOf<Boolean>().apply { addAll(List(bakeryItems.size) { false }) } }
@@ -78,7 +75,7 @@ fun ComposeScreen(navController: NavController, bakeryViewModel: BakeryViewModel
             bakeryItems.indices.forEach { index ->
                 delay(500)
                 visibleItems[index] = true
-                itemOffsetY[index] = if (index % 2 == 0) -240f else 240f // вверх для первого, вниз для второго
+                itemOffsetY[index] = if (index == 0) -240f else 240f // вверх для первого, вниз для второго
             }
             delay(500)
             visibleTotalPrice.value = true
@@ -125,15 +122,17 @@ fun ComposeScreen(navController: NavController, bakeryViewModel: BakeryViewModel
                 verticalArrangement = Arrangement.Center
             ) {
                 items(bakeryItems.withIndex().toList()) { (index, item) ->
+
+                    // Используем offset для анимации
                     val offsetY by animateDpAsState(
                         targetValue = itemOffsetY[index].dp,
-                        animationSpec = tween(durationMillis = 5000)
+                        animationSpec = tween(durationMillis = 2000)
                     )
 
                     AnimatedVisibility(
                         visible = visibleItems[index],
-                        enter = fadeIn(tween(2000)) + slideInVertically(
-                            initialOffsetY = { if (index % 2 == 0) -it / 2 else it / 2 } // вверх для четных, вниз для нечетных
+                        enter = fadeIn(tween(5000)) + slideInVertically(
+                            initialOffsetY = { if (index == 0) -it / 2 else it / 2 } // вверх для первого, вниз для второго
                         )
                     ) {
                         Box(
@@ -143,7 +142,6 @@ fun ComposeScreen(navController: NavController, bakeryViewModel: BakeryViewModel
                             BakeryItemRow(
                                 item = item,
                                 onAddToCart = { bakeryViewModel.addToCart(item) },
-
                                 navController = navController
                             )
                         }

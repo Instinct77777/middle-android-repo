@@ -16,30 +16,15 @@
         android:background="?android:attr/selectableItemBackground"
         app:tint="@android:color/white" />
 
-    <!-- com.example.androidpracticumcustomview.CustomViewGroup for Animated Views -->
+
     <com.example.androidpracticumcustomview.CustomViewGroup
         android:id="@+id/custom_view_group"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="match_parent"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp" />
-
-    <!-- RecyclerView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/bakery_items_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:scrollbars="vertical" />
-
-    <!-- Total Price -->
-    <TextView
-        android:id="@+id/total_price_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Total: 0.00 rub"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp" />
+        android:layout_marginBottom="16dp"
+        android:dividerPadding="16dp"
+        android:gravity="center|center_vertical"
+        android:orientation="vertical"
+        />
 </LinearLayout>
