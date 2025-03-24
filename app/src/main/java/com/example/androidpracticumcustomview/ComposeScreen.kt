@@ -1,10 +1,10 @@
 package com.example.androidpracticumcustomview
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -12,9 +12,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -28,7 +29,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,47 +41,68 @@ import kotlinx.coroutines.delay
 @Composable
 fun ComposeScreen(navController: NavController, bakeryViewModel: BakeryViewModel) {
     val backgroundImage = painterResource(id = R.drawable.about_us_background)
-    val bakeryItems = remember {
-        listOf(
-            BakeryItem("baget", 40.0, R.drawable.baget),
-            // Add more items if needed
-        )
-    }
-
-    if (bakeryItems.size > 2) {
-        throw IllegalStateException("Количество дочерних элементов не должно превышать двух")
-    }
-
-    val visibleItems = remember { mutableStateListOf<Boolean>().apply { addAll(List(bakeryItems.size) { false }) } }
-    val visibleTotalPrice = remember { mutableStateOf(false) }
-    val animatedPrice by animateFloatAsState(
-        targetValue = bakeryViewModel.totalPrice.toFloat(),
-        animationSpec = tween(durationMillis = 2000)
-    )
-
-    val itemOffsetY = remember { mutableStateListOf<Float>().apply { addAll(List(bakeryItems.size) { 0f }) } }
-    val totalPriceOffsetY = remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(Unit) {
-        bakeryItems.indices.forEach { index ->
-            delay(0)
-            visibleItems[index] = true
-            itemOffsetY[index] = -250f
-        }
-        delay(0)
-        visibleTotalPrice.value = true
-        totalPriceOffsetY.floatValue = -210f
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
         Image(
             painter = backgroundImage,
-            contentDescription = "AboutUsScreen Background",
+            contentDescription = "Background",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
+        )
+
+        val bakeryItems = remember {
+            listOf(
+                BakeryItem("baget", 40.0, R.drawable.baget)
+            )
+        }
+
+        if (bakeryItems.size > 2) {
+            throw IllegalStateException("Условие по заданию, дочерних элементов не должно превышать двух")
+        }
+
+        val visibleItems = remember {
+            mutableStateListOf<Boolean>().apply {
+                addAll(List(bakeryItems.size) { false })
+            }
+        }
+        val visibleTotalPrice = remember { mutableStateOf(false) }
+
+        val itemOffsetY = remember {
+            mutableStateListOf<Float>().apply {
+                addAll(List(bakeryItems.size) { 0f })
+            }
+        }
+
+        val totalPriceOffsetY = remember { mutableFloatStateOf(0f) }
+        val totalPriceAlpha = remember { mutableFloatStateOf(0f) }
+
+        LaunchedEffect(Unit) {
+            bakeryItems.indices.forEach { index ->
+                delay(0)
+                visibleItems[index] = true
+                itemOffsetY[index] = -360f
+            }
+            delay(0)
+            visibleTotalPrice.value = true
+            totalPriceOffsetY.value = 355f
+            totalPriceAlpha.value = 1f
+        }
+
+        val animatedPrice by animateFloatAsState(
+            targetValue = bakeryViewModel.totalPrice.toFloat(),
+            animationSpec = tween(durationMillis = 5000)
+        )
+
+        val animatedTotalPriceOffset by animateDpAsState(
+            targetValue = totalPriceOffsetY.value.dp,
+            animationSpec = tween(durationMillis = 5000)
+        )
+
+        val animatedTotalPriceAlpha by animateFloatAsState(
+            targetValue = totalPriceAlpha.value,
+            animationSpec = tween(durationMillis = 2000)
         )
 
         Column(
@@ -100,6 +121,8 @@ fun ComposeScreen(navController: NavController, bakeryViewModel: BakeryViewModel
                         contentDescription = "Back"
                     )
                 }
+
+
             }
 
             LazyColumn(
@@ -109,34 +132,43 @@ fun ComposeScreen(navController: NavController, bakeryViewModel: BakeryViewModel
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                items(bakeryItems.withIndex().toList()) { (index, item) ->
+                itemsIndexed(bakeryItems) { index, item ->
+                    val offsetY by animateDpAsState(
+                        targetValue = itemOffsetY[index].dp,
+                        animationSpec = tween(durationMillis = 5000)
+                    )
+
                     AnimatedVisibility(
                         visible = visibleItems[index],
-                        enter = fadeIn(animationSpec = tween(durationMillis = 2000)) +
-                                slideInVertically(animationSpec = tween(durationMillis = 1000)) { itemOffsetY[index].toInt() } +
-                                scaleIn(animationSpec = tween(1000))
+                        enter = fadeIn(tween(500)) + slideInVertically(initialOffsetY = { -it / 2 })
                     ) {
-                        BakeryItemRow(
-                            item = item,
-                            onAddToCart = { bakeryViewModel.addToCart(item) },
-                            navController = navController
-                        )
+                        Box(
+                            modifier = Modifier
+                                .offset(y = offsetY)
+                        ) {
+                            BakeryItemRow(
+                                item = item,
+                                onAddToCart = { bakeryViewModel.addToCart(item) },
+                                navController = navController
+                            )
+                        }
                     }
                 }
 
                 item {
-                    AnimatedVisibility(
-                        visible = visibleTotalPrice.value,
-                        enter = fadeIn(animationSpec = tween(durationMillis = 2000)) +
-                                slideInVertically(animationSpec = tween(durationMillis = 1000)) { totalPriceOffsetY.floatValue.toInt() } +
-                                scaleIn(animationSpec = tween(1000))
-                    ) {
-                        Text(
-                            text = "Total: ${"%.2f".format(animatedPrice)} rub.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Black,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                    if (visibleTotalPrice.value) {
+                        Box(
+                            modifier = Modifier
+                                .offset(y = animatedTotalPriceOffset)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Total: ${"%.2f".format(animatedPrice)} rub.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = animatedTotalPriceAlpha)
+                            )
+                        }
                     }
                 }
             }

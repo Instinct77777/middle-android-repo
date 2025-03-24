@@ -141,7 +141,8 @@ fun BakeryItemRow(item: BakeryItem, onAddToCart: () -> Unit, navController: NavC
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center // Центрирование по горизонтали
     ) {
 
         val image: Painter = painterResource(id = item.imageRes)
@@ -171,18 +172,16 @@ fun BakeryItemRow(item: BakeryItem, onAddToCart: () -> Unit, navController: NavC
             color = Color.White
         )
 
-        Spacer(modifier = Modifier.weight(1f))
-
-
         Button(
             onClick = onAddToCart,
-            modifier = Modifier.height(40.dp)
+            modifier = Modifier
+                .height(40.dp)
+                .padding(start = 8.dp) // Добавляем небольшой отступ
         ) {
             Text("add", color = Color.White)
         }
     }
 }
-
 
 
 @Composable

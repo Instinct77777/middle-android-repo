@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isEmpty
 
 class CustomViewGroup @JvmOverloads constructor(
     context: Context,
@@ -19,8 +20,8 @@ class CustomViewGroup @JvmOverloads constructor(
 
     companion object {
         private const val MAX_CHILDREN = 2
-        private const val ALPHA_ANIMATION_DURATION = 2000L // Fade duration 2000ms
-        private const val TRANSLATION_ANIMATION_DURATION = 5000L // Movement duration 5000ms
+        private const val ALPHA_ANIMATION_DURATION = 2000L
+        private const val TRANSLATION_ANIMATION_DURATION = 5000L
     }
 
     private var viewHeight = 0
@@ -33,6 +34,46 @@ class CustomViewGroup @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         viewHeight = h
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        for (i in 0 until childCount) {
+            measureChild(getChildAt(i), widthMeasureSpec, heightMeasureSpec)
+        }
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        if (isEmpty()) return
+
+        val width = r - l
+        val height = b - t
+
+        // Calculate center Y position (now at 1/3 of height to push content lower)
+        val centerY = height / 3
+
+        // First child starts slightly above the adjusted center
+        val firstChildOffset = -170 // Moves up by 100px from centerY
+        var nextChildTop = centerY + firstChildOffset
+
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            val childWidth = child.measuredWidth
+            val childHeight = child.measuredHeight
+
+            val childLeft = (width - childWidth) / 2 // Center horizontally
+            val childTop = nextChildTop
+
+            child.layout(
+                childLeft,
+                childTop,
+                childLeft + childWidth,
+                childTop + childHeight
+            )
+
+            // Add extra spacing after the first child to push the second child lower
+            nextChildTop += if (i == 0) childHeight + 10 else childHeight
+        }
     }
 
     override fun addView(child: View?) {
@@ -109,7 +150,7 @@ class XmlActivity : AppCompatActivity() {
                 ImageView(this).apply {
                     setImageResource(resId)
                     scaleType = ImageView.ScaleType.CENTER_CROP
-                    layoutParams = LinearLayout.LayoutParams(500, 500).apply {
+                    layoutParams = LinearLayout.LayoutParams(400, 400).apply {
                         gravity = Gravity.CENTER
                         topMargin = if (index == 0) 0 else 20
                     }
