@@ -50,11 +50,9 @@ class CustomViewGroup @JvmOverloads constructor(
         val height = b - t
 
         // Calculate center Y position (now at 1/3 of height to push content lower)
-        val centerY = height / 3
-
-        // First child starts slightly above the adjusted center
-        val firstChildOffset = -170 // Moves up by 100px from centerY
-        var nextChildTop = centerY + firstChildOffset
+        val centerY = height / 2
+        // First child starts above the adjusted center by a portion of its height
+        var nextChildTop = centerY - (getChildAt(0)?.measuredHeight?.div(1) ?: 0)
 
         for (i in 0 until childCount) {
             val child = getChildAt(i)
@@ -72,7 +70,7 @@ class CustomViewGroup @JvmOverloads constructor(
             )
 
             // Add extra spacing after the first child to push the second child lower
-            nextChildTop += if (i == 0) childHeight + 10 else childHeight
+            nextChildTop += if (i == 0) childHeight + 0 else childHeight
         }
     }
 
@@ -102,8 +100,8 @@ class CustomViewGroup @JvmOverloads constructor(
         view.visibility = View.VISIBLE
 
         val targetTranslation = when (indexOfChild(view)) {
-            0 -> -viewHeight / 4f
-            1 -> viewHeight / 4f
+            0 -> -viewHeight / 3f
+            1 -> viewHeight / 3f
             else -> 0f
         }
 
@@ -136,7 +134,7 @@ class XmlActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bakery_order)
 
-        findViewById<ImageButton>(R.id.back_button).setOnClickListener { onBackPressed() }
+       // findViewById<ImageButton>(R.id.back_button).setOnClickListener { onBackPressed() }
         customViewGroup = findViewById(R.id.custom_view_group)
 
         setupCustomViewGroup()
@@ -150,9 +148,9 @@ class XmlActivity : AppCompatActivity() {
                 ImageView(this).apply {
                     setImageResource(resId)
                     scaleType = ImageView.ScaleType.CENTER_CROP
-                    layoutParams = LinearLayout.LayoutParams(400, 400).apply {
+                    layoutParams = LinearLayout.LayoutParams(350, 350).apply {
                         gravity = Gravity.CENTER
-                        topMargin = if (index == 0) 0 else 20
+                        topMargin = if (index == 0) 0 else 1
                     }
                     customViewGroup.addView(this)
                 }

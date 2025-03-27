@@ -134,7 +134,6 @@ fun BakeryApp() {
 }
 
 
-
 @Composable
 fun BakeryItemRow(item: BakeryItem, onAddToCart: () -> Unit, navController: NavController) {
     Row(
@@ -142,7 +141,7 @@ fun BakeryItemRow(item: BakeryItem, onAddToCart: () -> Unit, navController: NavC
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center // Центрирование по горизонтали
+        horizontalArrangement = Arrangement.Center
     ) {
 
         val image: Painter = painterResource(id = item.imageRes)
@@ -151,7 +150,7 @@ fun BakeryItemRow(item: BakeryItem, onAddToCart: () -> Unit, navController: NavC
             contentDescription = item.name,
             modifier = Modifier
                 .size(40.dp)
-                .padding(end = 16.dp)
+                //.padding(end = 16.dp)
                 .clickable {
                     navController.navigate("item_description/${item.name}/${item.price}/${item.imageRes}")
                 }
