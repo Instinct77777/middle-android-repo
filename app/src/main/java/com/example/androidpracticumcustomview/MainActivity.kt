@@ -108,9 +108,8 @@ fun BakeryApp() {
             StartPage(navController = navController)
         }
         composable("bakery_order") {
-            ComposeScreen(navController = navController, bakeryViewModel = bakeryViewModel)
+            ComposeScreen(navController = navController)
         }
-
 
         composable(
             "item_description/{itemName}/{itemPrice}/{imageRes}",
