@@ -1,191 +1,155 @@
 package com.example.androidpracticumcustomview
 
-import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
+import android.util.Log
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
-@Composable
-fun ComposeScreen(navController: NavController, bakeryViewModel: BakeryViewModel) {
-    val bakeryItems = remember {
-        listOf(BakeryItem("baget", 40.0, R.drawable.baget))
-    }
-
-    if (bakeryItems.size > 2) {
-        throw IllegalStateException("Условие по заданию, дочерних элементов не должно превышать двух")
-    }
-
-    AnimatedBakeryScreen(
-        firstChild = {
-            FirstBakeryItem(
-                item = bakeryItems[0],
-                bakeryViewModel = bakeryViewModel,
-                navController = navController
-            )
-        },
-        secondChild = {
-            TotalPriceDisplay(bakeryViewModel = bakeryViewModel)
-        }
-    )
-}
-
 
 @Composable
-fun AnimatedBakeryScreen(
-    firstChild: @Composable() (() -> Unit)? = null,
-    secondChild: @Composable() (() -> Unit)? = null
+fun ComposeScreen(
+    navController: NavController,
+    firstChild: @Composable (() -> Unit)? = {
+        Text(
+            text = "Yandex Practicum",
+            color = Color.White,
+            style = TextStyle(fontWeight = FontWeight.Bold)
+        )
+    },
+    secondChild: @Composable (() -> Unit)? = {
+        Text(
+            text = "Yandex Practicum",
+            color = Color.White,
+            style = TextStyle(fontWeight = FontWeight.Bold)
+        )
+    },
+    durationAlphaMillis: Int = 2000,
+    durationOffsetMillis: Int = 5000
 ) {
-    val backgroundImage = painterResource(id = R.drawable.about_us_background)
+    val children = listOf(firstChild, secondChild)
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    if (children.count { it != null } > 2) {
+        throw IllegalStateException("ComposeScreen может содержать не более 2 элементов")
+    }
+
+    val alphaAnimation = remember { Animatable(0f) }
+    val offsetAnimation = remember { Animatable(0f) }
+
+    LaunchedEffect(Unit) {
+        launch {
+            alphaAnimation.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(
+                    durationMillis = durationAlphaMillis,
+                    easing = LinearEasing
+                )
+            )
+        }
+        launch {
+            offsetAnimation.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(
+                    durationMillis = durationOffsetMillis,
+                    easing = LinearOutSlowInEasing
+                )
+            )
+        }
+    }
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+
         Image(
-            painter = backgroundImage,
+            painter = painterResource(id = R.drawable.about_us_background),
             contentDescription = "Background",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    item {
-                        firstChild?.invoke()
-                    }
+        val containerHeight = constraints.maxHeight.toFloat()
+        val firstChildHeight = remember { mutableStateOf(0f) }
+        val secondChildHeight = remember { mutableStateOf(0f) }
 
-                    item {
-                        secondChild?.invoke()
+        firstChild?.let { content ->
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .onGloballyPositioned { coordinates ->
+                        firstChildHeight.value = coordinates.size.height.toFloat()
                     }
-                }
+                    .graphicsLayer {
+                        alpha = alphaAnimation.value
+                        val offset = offsetAnimation.value
+                        val maxOffset = (containerHeight - firstChildHeight.value) / 2
+                        translationY = -maxOffset * offset
+                    }
+            ) {
+                ErrorBoundary(content = content)
             }
         }
 
-
-
-@Composable
-fun FirstBakeryItem(
-    item: BakeryItem,
-    bakeryViewModel: BakeryViewModel,
-    navController: NavController,
-    durationAlphaMillis: Int = 2000,
-    durationOffsetMillis: Int = 5000
-) {
-    val visible = remember { mutableStateOf(false) }
-    val offsetY = remember { mutableFloatStateOf(0f) }
-    val alpha = remember { mutableFloatStateOf(0f) }
-    val slideOffset = remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(Unit) {
-        visible.value = true
-        offsetY.floatValue = -390f
-
-        launch {
-            animate(
-                initialValue = 0f,
-                targetValue = 1f,
-
-                animationSpec = tween(durationAlphaMillis)
-            ) { value, _ -> alpha.floatValue = value }
-        }
-        launch {
-            animate(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = tween(durationOffsetMillis)
-            ) { value, _ -> slideOffset.floatValue = value }
-        }
-    }
-
-    val animatedOffset by animateDpAsState(
-        targetValue = offsetY.floatValue.dp,
-        animationSpec = tween(durationMillis = durationOffsetMillis)
-    )
-
-    if (visible.value) {
-        Box(
-            modifier = Modifier
-                .alpha(alpha.floatValue)
-                .offset(y = animatedOffset + slideOffset.floatValue.dp)
-        ) {
-            BakeryItemRow(
-                item = item,
-                onAddToCart = { bakeryViewModel.addToCart(item) },
-                navController = navController
-            )
+        secondChild?.let { content ->
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .onGloballyPositioned { coordinates ->
+                        secondChildHeight.value = coordinates.size.height.toFloat()
+                    }
+                    .graphicsLayer {
+                        alpha = alphaAnimation.value
+                        val offset = offsetAnimation.value
+                        val maxOffset = (containerHeight - secondChildHeight.value) / 2
+                        translationY = maxOffset * offset
+                    }
+            ) {
+                ErrorBoundary(content = content)
+            }
         }
     }
 }
 
 @Composable
-fun TotalPriceDisplay(
-    bakeryViewModel: BakeryViewModel,
-    durationAlphaMillis: Int = 2000,
-    durationOffsetMillis: Int = 5000
-) {
-    val visible = remember { mutableStateOf(false) }
-    val offsetY = remember { mutableFloatStateOf(0f) }
-    val alpha = remember { mutableFloatStateOf(0f) }
+private fun ErrorBoundary(content: @Composable () -> Unit) {
+    val errorState = remember { mutableStateOf<Throwable?>(null) }
 
-    LaunchedEffect(Unit) {
-        visible.value = true
-        offsetY.floatValue = 390f
-        alpha.floatValue = 1f
+    val errorHandler = remember {
+        Thread.UncaughtExceptionHandler { _, e ->
+            Log.e("ComposeScreen", "Render error", e)
+            errorState.value = e
+        }
     }
 
-    val animatedPrice by animateFloatAsState(
-        targetValue = bakeryViewModel.totalPrice.toFloat(),
-        animationSpec = tween(durationMillis = durationOffsetMillis)
-    )
+    LaunchedEffect(Unit) {
+        Thread.setDefaultUncaughtExceptionHandler(errorHandler)
+    }
 
-    val animatedOffset by animateDpAsState(
-        targetValue = offsetY.floatValue.dp,
-        animationSpec = tween(durationMillis = durationOffsetMillis)
-    )
-
-    val animatedAlpha by animateFloatAsState(
-        targetValue = alpha.floatValue,
-        animationSpec = tween(durationMillis = durationAlphaMillis)
-    )
-
-    if (visible.value) {
-        Box(
-            modifier = Modifier
-                .alpha(animatedAlpha)
-                .offset(y = animatedOffset)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Total: ${"%.2f".format(animatedPrice)} rub.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = animatedAlpha)
-            )
-        }
+    if (errorState.value != null) {
+        Text(
+            text = "Render error: ${errorState.value?.message}",
+            color = Color.Red
+        )
+    } else {
+        content()
     }
 }
