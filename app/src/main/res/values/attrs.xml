@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<resources>
+    <declare-styleable name="CustomViewGroup">
+        <attr name="maxChildren" format="integer"/>
+        <attr name="animationDuration" format="integer"/>
+        <attr name="animationDelay" format="integer"/>
+    </declare-styleable>
+
+</resources>
