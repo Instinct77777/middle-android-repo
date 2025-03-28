@@ -31,7 +31,6 @@ class CustomViewGroup @JvmOverloads constructor(
         private const val TAG = "CustomViewGroup"
         private const val MAX_CHILDREN = 2
         private const val INITIAL_OFFSET_FACTOR = 0.5f
-
     }
 
     init {
@@ -41,7 +40,6 @@ class CustomViewGroup @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-
 
         val childWidthSpec = MeasureSpec.makeMeasureSpec(
             MeasureSpec.getSize(widthMeasureSpec),
@@ -114,19 +112,16 @@ class CustomViewGroup @JvmOverloads constructor(
             val currentTop = view.top
             val toY = (finalTop - currentTop).toFloat()
 
-
-
             val animationSet = AnimationSet(true).apply {
-
                 addAnimation(AlphaAnimation(0f, 1f).apply {
                     duration = animationDuration
                 })
-
 
                 addAnimation(TranslateAnimation(0f, 0f, 0f, toY).apply {
                     duration = offsetDuration
                     interpolator = AccelerateDecelerateInterpolator()
                     fillAfter = true
+
                 })
 
                 setAnimationListener(object : AnimationListener {
@@ -135,24 +130,22 @@ class CustomViewGroup @JvmOverloads constructor(
                     }
 
                     override fun onAnimationEnd(animation: Animation?) {
-
-                        view.layout(
-                            view.left,
-                            finalTop,
-                            view.right,
-                            finalTop + view.height
-                        )
-
-                        view.clearAnimation()
+                        view.post {
+                            view.layout(
+                                view.left,
+                                finalTop,
+                                view.right,
+                                finalTop + view.height
+                            )
+                            view.clearAnimation()
+                        }
                     }
 
                     override fun onAnimationRepeat(animation: Animation?) = Unit
                 })
             }
 
-
             view.startAnimation(animationSet)
-
         } catch (e: Exception) {
             handleError(e, "Error animating child")
         }
